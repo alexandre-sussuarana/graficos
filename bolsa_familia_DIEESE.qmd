@@ -5,7 +5,10 @@ library(ggthemes)
 
 bolsa <- data.frame(
     ano = 2003:2021,
-    valor = c(
+    orc = c(1.7,12.9,10.9,14.6,20.8,3.1,24.4,26.6,31.2,36,39.9,41.1,39.7,36.7,34.8,35.7,37.9,36.7,37.7),
+    fam = c(3.6,5.4,8,11,11,10.6,12.4,12.6,13.1,13.8,13.8,14,14,13.9,13.6,13.9,13.5,14.3,14.7),
+    nom = c(52.7,74.5,45.6,47.2,66.1,82.5,79.1,88.8,105.7,124.3,144.6,155.9,160.6,164.3,171.5,175.8,200.4,189.8,198.3),
+    ipca = c(
       156.3,
       199.7,
       113.9,
@@ -42,17 +45,17 @@ correcao = None
 for i in list(range(0, len(bolsa))):
     if correcao is None:
         correcao = float(cesta.adjust(bolsa.ano[i].astype('str')+'-12-31',
-                     bolsa.valor[i]))
+                     bolsa.nom[i]))
     elif correcao.__class__ is float:
         correcao = [
             correcao,
             float(cesta.adjust(bolsa.ano[i].astype('str') + '-12-31',
-                               bolsa.valor[i]))
+                               bolsa.nom[i]))
         ]
     else:
     correcao.append(
         float(cesta.adjust(bolsa.ano[i].astype('str') + '-12-31',
-                           bolsa.valor[i]))
+                           bolsa.nom[i]))
     )
 
 bolsa['correcao'] = correcao
@@ -64,28 +67,29 @@ bolsa.to_csv('bolsa.csv')
 bolsa <- read.csv(file = 'bolsa.csv')
 
 bolsa |>
-  select(ano, valor, correcao) |>
-  pivot_longer(cols = 2:3, names_to = 'tipo', values_to = 'valor') |>
+  select(ano, nom, ipca, correcao) |>
+  pivot_longer(cols = 2:4, names_to = 'tipo', values_to = 'valor') |>
   ggplot(aes(x = ano, y = valor, group = tipo, colour = tipo))+
   geom_line(size = 2)+
-  scale_colour_discrete(labels = c('Valor Corrigido', 'Valor nominal'),
-                        type = c('orange', 'blue'))+
+  scale_colour_discrete(labels = c('poder de compra\n(cesta básica)', 'correção pela\ninflação (IPCA)', 'valor nominal'),
+                        type = c('orange', 'blue', 'pink'))+
   scale_x_discrete(limits = seq(2003,2021,2))+
   theme_gdocs()+
   labs(
     title = 'Bolsa Familia',
     subtitle = 'média anual corrigida pelo valor da cesta básica de 2021',
-    caption = 'Elab.: Alexandre Sussuarana. 2022.\nFonte dos valores nominais: Poder360 (https://t.co/2SiwiNOPvv).\nCorreção monetária: DIEESE/Pacote Python de @cuducos (https://t.co/VvCQlObglk).',
+    caption = 'Elab.: github.com/alexandre-sussuarana. 2022.\nFonte Bolsa Familia: Poder360 (https://t.co/2SiwiNOPvv).\nCorreção: DIEESE / Pac. Python de @cuducos (https://t.co/VvCQlObglk).',
     x = ''
 , y = '')+
   theme(
-    legend.position = c(0.75,0.75),
+    legend.position = c(0.8,0.25),
     legend.title = element_blank(),
     legend.background = element_blank(),
     legend.key = element_blank(),
     plot.caption = element_text(size = 9),
     panel.background = element_rect(fill = 'transparent'),
-    plot.background = element_rect(fill = 'transparent', color = NA)
+    plot.background = element_rect(fill = 'transparent', color = NA),
+    panel.grid = element_line(linetype = 'dotted')
   )
   
 ggsave(filename = 'bolsa.png',
@@ -94,4 +98,3 @@ ggsave(filename = 'bolsa.png',
        width = unit(5, 'cm'),
        height = unit(4.5, 'cm'))
 ```
-
