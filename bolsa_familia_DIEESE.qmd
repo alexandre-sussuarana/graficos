@@ -1,0 +1,97 @@
+```{r base_de_dados}
+
+library(tidyverse)
+library(ggthemes)
+
+bolsa <- data.frame(
+    ano = 2003:2021,
+    valor = c(
+      156.3,
+      199.7,
+      113.9,
+      110.8,
+      157.6,
+      180.8,
+      162.9,
+      175.5,
+      197.8,
+      218.3,
+      240.4,
+      245.1,
+      237,
+      219.4,
+      214.1,
+      213.5,
+      233.9,
+      214.6,
+      214.7
+    )
+)
+
+
+write.csv(x = bolsa, file = 'bolsa.csv')
+```
+
+```{python}
+
+bolsa = pd.read_csv('bolsa.csv')
+import pandas as pd
+from calculadora_do_cidadao import CestaBasica
+cesta = CestaBasica()
+correcao = None
+for i in list(range(0, len(bolsa))):
+    if correcao is None:
+        correcao = float(cesta.adjust(bolsa.ano[i].astype('str')+'-12-31',
+                     bolsa.valor[i]))
+    elif correcao.__class__ is float:
+        correcao = [
+            correcao,
+            float(cesta.adjust(bolsa.ano[i].astype('str') + '-12-31',
+                               bolsa.valor[i]))
+        ]
+    else:
+    correcao.append(
+        float(cesta.adjust(bolsa.ano[i].astype('str') + '-12-31',
+                           bolsa.valor[i]))
+    )
+
+bolsa['correcao'] = correcao
+
+bolsa.to_csv('bolsa.csv')
+```
+
+```{r}
+bolsa <- read.csv(file = 'bolsa.csv')
+
+bolsa |>
+  select(ano, valor, correcao) |>
+  pivot_longer(cols = 2:3, names_to = 'tipo', values_to = 'valor') |>
+  ggplot(aes(x = ano, y = valor, group = tipo, colour = tipo))+
+  geom_line(size = 2)+
+  scale_colour_discrete(labels = c('Valor Corrigido', 'Valor nominal'),
+                        type = c('orange', 'blue'))+
+  scale_x_discrete(limits = seq(2003,2021,2))+
+  theme_gdocs()+
+  labs(
+    title = 'Bolsa Familia',
+    subtitle = 'média anual corrigida pelo valor da cesta básica de 2021',
+    caption = 'Elab.: Alexandre Sussuarana. 2022.\nFonte dos valores nominais: Poder360 (https://t.co/2SiwiNOPvv).\nCorreção monetária: DIEESE/Pacote Python de @cuducos (https://t.co/VvCQlObglk).',
+    x = ''
+, y = '')+
+  theme(
+    legend.position = c(0.75,0.75),
+    legend.title = element_blank(),
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    plot.caption = element_text(size = 9),
+    panel.background = element_rect(fill = 'transparent'),
+    plot.background = element_rect(fill = 'transparent', color = NA)
+  )
+  
+ggsave(filename = 'bolsa.png',
+       device = 'png',
+       scale = 1,
+       width = unit(5, 'cm'),
+       height = unit(4.5, 'cm'))
+```
+
